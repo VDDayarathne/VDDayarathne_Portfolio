@@ -37,7 +37,7 @@ export default function CustomCursor() {
       if (!visible) setVisible(true);
     };
     const over = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;21
+      const target = e.target as HTMLElement;
       setHovering(!!target.closest("a, button, [data-cursor-hover]"));
     };
 

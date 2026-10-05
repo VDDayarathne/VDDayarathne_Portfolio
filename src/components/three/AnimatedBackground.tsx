@@ -162,7 +162,6 @@ export default function AnimatedBackground({
       if (!mobile) window.removeEventListener("mousemove", handleMove);
       anims.forEach((a) => a.pause());
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orbs, dots, mobile]);
 
   useEffect(() => {
