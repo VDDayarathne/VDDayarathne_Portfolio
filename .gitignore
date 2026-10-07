@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.background-verification/
 
 # next.js
 /.next/

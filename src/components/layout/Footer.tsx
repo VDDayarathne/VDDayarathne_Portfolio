@@ -1,55 +1,22 @@
-import { Mail, ArrowUpRight } from "lucide-react";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { ArrowUpRight } from "lucide-react";
 import { profile } from "@/data/profile";
 
 export default function Footer() {
   return (
-    <footer id="footer" className="relative border-t border-border">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 py-12 sm:flex-row">
-        <div className="text-center sm:text-left">
-          <p className="font-display text-lg font-semibold">
-            {profile.name}
-            <span className="text-accent-2">.</span>
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            {new Date().getFullYear()} &middot; Built with Next.js, Framer Motion &amp; WebGL.
-          </p>
+    <footer id="footer" className="relative border-t border-border bg-background-elevated text-foreground">
+      <div className="site-container">
+        <div className="footer-top">
+          <p className="footer-signature">Vishwa Dayarathne<span className="text-accent">.</span></p>
+          <a href="#top" className="text-link shrink-0">Back to top <ArrowUpRight size={18} aria-hidden="true" /></a>
         </div>
-
-        <div className="flex items-center gap-5">
-          <a
-            href={profile.github}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="GitHub"
-            className="text-muted transition-colors hover:text-foreground"
-          >
-            <FaGithub size={18} />
-          </a>
-          <a
-            href={profile.linkedin}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="LinkedIn"
-            className="text-muted transition-colors hover:text-foreground"
-          >
-            <FaLinkedin size={18} />
-          </a>
-          <a
-            href={`mailto:${profile.email}`}
-            aria-label="Email"
-            className="text-muted transition-colors hover:text-foreground"
-          >
-            <Mail size={18} />
-          </a>
+        <div className="footer-bottom">
+          <p className="meta">© {new Date().getFullYear()} {profile.name} · Colombo, Sri Lanka</p>
+          <nav aria-label="Footer links" className="footer-links">
+            <a href={profile.github} target="_blank" rel="noreferrer" className="text-link">GitHub <ArrowUpRight size={14} aria-hidden="true" /></a>
+            <a href={profile.linkedin} target="_blank" rel="noreferrer" className="text-link">LinkedIn <ArrowUpRight size={14} aria-hidden="true" /></a>
+            <a href={`mailto:${profile.email}`} className="text-link">Email <ArrowUpRight size={14} aria-hidden="true" /></a>
+          </nav>
         </div>
-
-        <a
-          href="#top"
-          className="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
-        >
-          Back to top <ArrowUpRight size={14} />
-        </a>
       </div>
     </footer>
   );

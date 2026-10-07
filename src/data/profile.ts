@@ -206,11 +206,3 @@ export const extracurricular: string[] = [
   "Active member of the IEEE Student Branch of Sabaragamuwa University of Sri Lanka, contributing to various technical and professional events.",
   "Active member of the Society of Computer Sciences at Sabaragamuwa University of Sri Lanka, participating in academic and collaborative student initiatives.",
 ];
-
-// Exact URLs as provided — embedded via <iframe>, which is how Spline's own
-// "Embed" export works, so no scene-file URL needs to be guessed.
-export const splineScenes = {
-  hero: "https://my.spline.design/radialglass-rKaAdWrIZa0aCtcZoJJXxbw3/",
-  glass: "https://my.spline.design/stackableglass-F15aabXuldNy7TpqhRCYzYFT-qH8/",
-  carousel: "https://my.spline.design/3dcarouselcopycopy-KDRgb4MirE9m9pjMoHslXllT-FUw/",
-};
