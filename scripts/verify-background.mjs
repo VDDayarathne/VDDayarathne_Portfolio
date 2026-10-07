@@ -440,6 +440,54 @@ async function key(cdp,key,code=key,extra={}) {
   await cdp.send("Input.dispatchKeyEvent",{type:"keyUp",key,code,...extra});
 }
 
+async function verifyMotionJourney() {
+  progress("Full-page slow, fast, reverse motion and mid-page refresh");
+  const cdp=await connect();
+  await cdp.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
+  await cdp.send('Page.navigate',{url:origin});
+  await until(()=>snapshot(cdp),state=>Boolean(state.last),'Motion ready');
+  await sleep(2500);
+  const timing=await cdp.evaluate(`(async()=>{
+    const gaps=[], tasks=[];
+    const observer=new PerformanceObserver(list=>tasks.push(...list.getEntries().map(e=>e.duration)));
+    observer.observe({type:'longtask'});
+    const range=document.documentElement.scrollHeight-innerHeight;
+    for(const [from,to,duration] of [[0,0.2,2000],[0.2,1,3000],[1,0,2200]]) {
+      await new Promise(resolve=>{
+        let start,previous;
+        const step=time=>{
+          start??=time;
+          if(previous)gaps.push(time-previous);
+          previous=time;
+          const p=Math.min(1,(time-start)/duration);
+          scrollTo({top:range*(from+(to-from)*p),behavior:'instant'});
+          if(p<1)requestAnimationFrame(step);else resolve();
+        };
+        requestAnimationFrame(step);
+      });
+    }
+    observer.disconnect();gaps.sort((a,b)=>a-b);
+    return {frames:gaps.length,p95FrameMs:gaps[Math.floor(gaps.length*.95)],over50ms:gaps.filter(n=>n>50).length,longTasks:tasks,layoutShift:window.__backgroundProbe.layoutShift};
+  })()`);
+  for(const id of ['about','experience','projects','skills','education','contact','footer','projects','about']) {
+    await cdp.evaluate(`document.getElementById('${id}').scrollIntoView({behavior:'instant',block:'start'})`);
+    await sleep(1100);
+    const hidden=await cdp.evaluate(`[...document.querySelectorAll('#${id} .reveal,#${id} .stagger-item')].filter(e=>{const r=e.getBoundingClientRect();return r.bottom>120&&r.top<innerHeight*.8&&Number(getComputedStyle(e).opacity)<.95}).map(e=>e.className)`);
+    assert.deepEqual(hidden,[],`${id}: content remains visible on forward and reverse scroll`);
+  }
+  await cdp.evaluate("document.getElementById('projects').scrollIntoView({behavior:'instant'})");
+  await sleep(1100);
+  const before=await cdp.evaluate('scrollY');
+  await cdp.send('Page.reload');
+  await until(()=>snapshot(cdp),s=>Boolean(s.last)&&s.scrollY>500,'Reload restores reading position');
+  await sleep(2200);
+  assert(Math.abs((await cdp.evaluate('scrollY'))-before)<10,'Mid-page refresh preserves position');
+  await saveScreenshot(cdp,'motion-restored-projects');
+  await verifyHealthy(cdp,'motion journey');
+  await writeFile('.background-verification/motion.json',JSON.stringify(timing,null,2));
+  console.log(JSON.stringify({passed:true,motion:timing},null,2));
+}
+
 async function verifyInteractions() {
   progress("Accessible desktop navigation, skill filters, form validation, and keyboard focus");
   const cdp = await connect();
@@ -616,6 +664,8 @@ try {
 
   if (process.argv.includes("--appearance-only")) {
     await verifyAppearanceOnly();
+  } else if (process.argv.includes("--motion-only")) {
+    await verifyMotionJourney();
   } else if (process.argv.includes("--ui-only")) {
     await verifyInteractions();
     console.log(JSON.stringify({passed:true,results},null,2));

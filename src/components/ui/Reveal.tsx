@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { motion, useAnimationControls, useInView, useReducedMotion } from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { createRevealVariants, motionTokens, type MotionPreset } from "@/lib/motion";
 
@@ -13,7 +13,23 @@ const subscribeCompact = (callback: () => void) => {
 };
 const getCompactSnapshot = () => window.matchMedia(compactQuery).matches;
 const compactDistance = (preset: MotionPreset) =>
-  ["major", "heading", "project", "intro"].includes(preset) ? 16 : 10;
+  preset === "fade" ? 0 : ["major", "heading", "project", "intro"].includes(preset) ? 16 : 10;
+
+function useRevealPlayback(reduced: boolean, amount: number, once = true) {
+  const ref = useRef<HTMLDivElement & HTMLSpanElement>(null);
+  const controls = useAnimationControls();
+  const visible = useInView(ref, { once, amount, margin: motionTokens.viewport.margin });
+  useLayoutEffect(() => {
+    // Never hide content already visible at a restored scroll position.
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && ref.current && ref.current.getBoundingClientRect().top > innerHeight) {
+      controls.set("prepared");
+    }
+  }, [controls]);
+  useEffect(() => {
+    if (visible || reduced) void controls.start("show");
+  }, [controls, visible, reduced]);
+  return [ref, controls] as const;
+}
 
 function useCompactMotion() {
   return useSyncExternalStore(subscribeCompact, getCompactSnapshot, () => true);
@@ -42,12 +58,13 @@ export default function Reveal({
 }: RevealProps) {
   const reduced = useReducedMotion() === true;
   const compact = useCompactMotion();
+  const [ref, controls] = useRevealPlayback(reduced, amount, once);
   const Component = as === "span" ? motion.span : motion.div;
   return (
     <Component
       initial={false}
-      whileInView="show"
-      viewport={{ once, amount, margin: motionTokens.viewport.margin }}
+      ref={ref}
+      animate={controls}
       variants={createRevealVariants({ reduced, delay, preset, distance: y ?? (compact ? compactDistance(preset) : undefined) })}
       className={cn("reveal", `reveal--${preset}`, className)}
     >
@@ -91,12 +108,13 @@ export function StaggerGroup({
 }) {
   const reduced = useReducedMotion() === true;
   const compact = useCompactMotion();
+  const [ref, controls] = useRevealPlayback(reduced, amount);
   return (
     <motion.div
       initial={false}
-      whileInView="show"
-      viewport={{ once: true, amount, margin: motionTokens.viewport.margin }}
-      variants={{ show: { transition: {
+      ref={ref}
+      animate={controls}
+      variants={{ prepared: {}, show: { transition: {
         delayChildren: reduced ? 0 : delay,
         staggerChildren: reduced ? 0 : (compact ? Math.min(stagger, 0.045) : stagger),
       } } }}

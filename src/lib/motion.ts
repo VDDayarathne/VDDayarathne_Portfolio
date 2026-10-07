@@ -106,8 +106,8 @@ const presetConfig: Record<MotionPreset, {
 };
 
 /**
- * Keyframed show values keep content visible in server HTML while still
- * animating after hydration. Intro elements use `prepared` while fonts settle.
+ * Scalar targets animate from the current state without replaying on resize.
+ * Offscreen content is prepared after hydration; restored content stays visible.
  */
 export function createRevealVariants({
   reduced = false,
@@ -127,17 +127,17 @@ export function createRevealVariants({
       opacity: reduced ? 1 : 0,
       y: reduced ? 0 : travel,
       scale: reduced ? 1 : (config.scale ?? 1),
-      clipPath: config.clip && !reduced ? "inset(0 0 100% 0)" : "inset(0 0 0% 0)",
+      // A fully clipped observed element can never meet its intersection threshold.
+      // The heading's overflow wrapper provides its mask without hiding its geometry.
+      clipPath: "inset(0 0 0% 0)",
     },
     show: reduced
       ? { opacity: 1, y: 0, scale: 1, clipPath: "inset(0 0 0% 0)", transition: { duration: 0 } }
       : {
-          opacity: [0, 1],
-          y: [travel, 0],
-          scale: config.scale ? [config.scale, 1] : 1,
-          clipPath: config.clip
-            ? ["inset(0 0 100% 0)", "inset(0 0 0% 0)"]
-            : "inset(0 0 0% 0)",
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          clipPath: "inset(0 0 0% 0)",
           transition: {
             duration: config.duration,
             delay,

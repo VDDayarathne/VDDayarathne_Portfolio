@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform, type UseScrollOptions } from "framer-motion";
-import { useRef, type ReactNode } from "react";
+import { motion, scroll, useMotionValue, useTransform } from "framer-motion";
+import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { handoffTokens, type HandoffPreset } from "@/lib/motion";
 
@@ -17,12 +17,29 @@ export default function ScrollHandoff({
   direction?: 1 | -1;
 }) {
   const target = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion() === true;
-  const offsets: UseScrollOptions["offset"] = preset === "hero"
-    ? ["start start", "end start"]
-    : ["start 92%", "end 8%"];
-  const { scrollYProgress } = useScroll({ target, offset: offsets });
   const values = handoffTokens[preset];
+  const scrollYProgress = useMotionValue(values.input[1]);
+  useEffect(() => {
+    const element = target.current;
+    if (!element) return;
+    const enabled = window.matchMedia("(min-width: 640px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let stop: (() => void) | undefined;
+    const configure = () => {
+      stop?.();
+      stop = undefined;
+      if (!enabled.matches) {
+        scrollYProgress.set(values.input[1]);
+        return;
+      }
+      stop = scroll((progress: number) => scrollYProgress.set(progress), {
+        target: element,
+        offset: preset === "hero" ? ["start start", "end start"] : ["start 92%", "end 8%"],
+      });
+    };
+    enabled.addEventListener("change", configure);
+    configure();
+    return () => { stop?.(); enabled.removeEventListener("change", configure); };
+  }, [preset, scrollYProgress, values]);
   const opacity = useTransform(scrollYProgress, values.input, values.opacity);
   const y = useTransform(scrollYProgress, values.input, values.y);
   const scale = useTransform(scrollYProgress, values.input, values.scale);
@@ -33,7 +50,7 @@ export default function ScrollHandoff({
       ref={target}
       data-scroll-handoff={preset}
       className={cn("scroll-handoff", `scroll-handoff--${preset}`, className)}
-      style={reduced ? undefined : { opacity, x, y, scale }}
+      style={{ opacity, x, y, scale }}
     >
       {children}
     </motion.div>
