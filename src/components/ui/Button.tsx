@@ -43,6 +43,7 @@ export default function Button({
         {...anchorAttributes}
         href={disabled ? undefined : anchorAttributes.href}
         className={classes}
+        data-cursor="button"
         aria-disabled={disabled || undefined}
         tabIndex={disabled ? -1 : anchorAttributes.tabIndex}
         onClick={disabled ? (event) => event.preventDefault() : anchorAttributes.onClick}
@@ -59,6 +60,7 @@ export default function Button({
       type={buttonAttributes.type ?? "button"}
       disabled={disabled}
       className={classes}
+      data-cursor="button"
     >
       {children}
     </button>

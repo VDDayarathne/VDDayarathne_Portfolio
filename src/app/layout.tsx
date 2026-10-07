@@ -59,8 +59,13 @@ export default async function RootLayout({
 }>) {
   const backgroundFrames = await getBackgroundFrames();
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(()=>{try{if(matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.classList.add("motion-capable");window.__portfolioMotion=true;const s=document.createElement("style");s.id="intro-guard";s.textContent=".motion-capable:not(.motion-started) [data-intro],.motion-capable:not(.motion-started) [data-intro-stagger]>.stagger-item{opacity:0}";document.head.appendChild(s);setTimeout(()=>{if(!document.documentElement.classList.contains("motion-started"))document.documentElement.classList.remove("motion-capable")},2500)}}catch{}})()`,
+          }}
+        />
         {backgroundFrames[0] && (
           <link rel="preload" as="image" href={backgroundFrames[0]} fetchPriority="high" />
         )}

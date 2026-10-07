@@ -44,8 +44,9 @@ downloads. No dependencies were added.
 
 - `src/app/globals.css`: semantic colors, typography, gutters, spacing, reading
   widths, surfaces, borders, radii, and interaction timing.
-- `src/lib/motion.ts`: shared 180/250 ms interactions, 450 ms / 12 px reveals,
-  60 ms stagger and the existing easing curve. The hero uses an 18 px entrance.
+- `src/lib/motion.ts`: shared 160/280 ms interactions; 420–820 ms fade,
+  support, major, heading, card, project, and intro presets; 8–30 px travel;
+  45–75 ms stagger; and standard, reveal, and exit easing curves.
 - Hero: open name masthead, portrait space, primary project CTA, CV link,
   professional role and availability, and a scroll cue.
 - About: asymmetric biography, metadata column, and unboxed statistics.
@@ -67,6 +68,44 @@ Mobile stacks project/experience columns, wraps actions and filters, and uses th
 existing accessible navigation dialog. No custom pointer is shown on touch.
 
 ## Interaction and accessibility
+
+The opening is a deterministic one-time sequence that starts after fonts and the
+first paint are ready. Navigation, role metadata, the intro phrase, both name
+lines, supporting copy, actions, and bottom metadata enter in that order. A
+pre-paint guard prevents a visible flash before the sequence begins and releases
+content after 2.5 seconds if JavaScript initialization is interrupted.
+
+Section motion follows the same grammar throughout the page. Eyebrows fade,
+headings use a clipped reveal, supporting copy rises a shorter distance, and
+cards or project rows use a slightly longer reveal with a very small scale
+settle. Related lists stagger by 45–75 ms. Viewport motion runs once per element,
+begins just before the element enters the viewport, and uses opacity and transform
+properties only. Skill-filter changes animate the incoming result group without
+leaving stale items in the accessibility tree.
+
+A second, scroll-linked handoff layer connects those one-time reveals into a
+continuous journey. The hero retains full emphasis at the top, then rises 16 px
+and settles to 68% opacity as About takes priority. Major sections begin at 84%
+opacity and 16 px below their resting position, remain fully emphasized through
+their reading range, and leave at 82% opacity with a 12 px rise. Experience rows
+use a quieter version. Project rows use the strongest overlap, with alternating
+8 px horizontal entry, a 16 px rise, and partial outgoing opacity so adjacent
+projects remain visually related. Contact and footer use closing presets that
+finish at full emphasis.
+
+The handoff values live beside the reveal tokens in `src/lib/motion.ts` and are
+applied by `src/components/ui/ScrollHandoff.tsx`. Framer Motion derives them from
+motion values rather than React state or a new scroll listener. The existing
+background mapper and Lenis configuration remain unchanged. The reference site's
+shared reveal hierarchy—masked rise for high-value text, plain fades for support,
+and fine versus normal stagger—informed the pacing; its design, code, timing,
+branding, and assets were not copied.
+
+Mobile reduces travel to 10–16 px, shortens the opening, and caps stagger at
+45 ms. It also removes scroll-linked section handoffs. Reduced motion exposes all
+content immediately, removes transforms and
+clip masks, disables Lenis and the custom cursor, and keeps the first background
+frame. Server-rendered and no-JavaScript content remains visible.
 
 The cursor retains its original difference blend and spring tracking. Motion
 values update transforms without React state updates per pointer move. Hover

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, X, Mail, ArrowRight } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
@@ -131,6 +131,8 @@ export default function Navbar() {
     <header className="fixed inset-x-0 top-0 z-40 text-foreground">
       <div className="site-container py-3 sm:py-4">
         <div
+          data-intro=""
+          style={{ "--intro-delay": "0.08s" } as CSSProperties}
           className={cn(
             "nav-shell flex min-h-14 items-center justify-between gap-5 transition-[background-color,border-color,box-shadow]",
             scrolled
@@ -141,6 +143,7 @@ export default function Navbar() {
           <a
             ref={logoRef}
             href="#top"
+            data-cursor="nav"
             aria-label={`${profile.name}, back to top`}
             className="inline-flex min-h-11 items-center text-xl font-semibold tracking-tight"
           >
@@ -152,6 +155,7 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
+                data-cursor="nav"
                 aria-current={activeSection === link.href.slice(1) ? "location" : undefined}
                 className="nav-link flex min-h-11 items-center"
               >
@@ -161,10 +165,10 @@ export default function Navbar() {
           </nav>
 
           <div className="nav-actions hidden items-center gap-1 lg:flex">
-            <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="icon-button">
+            <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="icon-button" data-cursor="button">
               <FaGithub size={17} aria-hidden="true" />
             </a>
-            <a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="icon-button">
+            <a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="icon-button" data-cursor="button">
               <FaLinkedin size={17} aria-hidden="true" />
             </a>
             <Button href="#contact" variant="primary" className="ml-2 min-h-10 px-4 text-xs">
@@ -181,6 +185,7 @@ export default function Navbar() {
             aria-expanded={open}
             aria-controls="mobile-navigation"
             aria-haspopup="dialog"
+            data-cursor="button"
           >
             {open ? <X size={21} aria-hidden="true" /> : <Menu size={21} aria-hidden="true" />}
           </button>
@@ -199,7 +204,7 @@ export default function Navbar() {
             initial={reducedMotion ? false : { opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
-            transition={{ duration: reducedMotion ? 0 : motionTokens.duration.normal, ease: motionTokens.ease }}
+            transition={{ duration: reducedMotion ? 0 : motionTokens.duration.normal, ease: motionTokens.ease.standard }}
             className="mobile-panel fixed inset-0 z-50 overflow-y-auto bg-background lg:hidden"
           >
             <div className="site-container pt-4 pb-8">
@@ -210,9 +215,15 @@ export default function Navbar() {
                     <X size={21} aria-hidden="true" />
                   </button>
                 </div>
-                <nav aria-label="Mobile navigation" className="mt-3 flex flex-col">
+                <motion.nav
+                  aria-label="Mobile navigation"
+                  className="mt-3 flex flex-col"
+                  initial={reducedMotion ? false : "closed"}
+                  animate="open"
+                  variants={{ open: { transition: { staggerChildren: reducedMotion ? 0 : 0.045, delayChildren: reducedMotion ? 0 : 0.06 } } }}
+                >
                   {links.map((link) => (
-                    <a
+                    <motion.a
                       key={link.href}
                       href={link.href}
                       onClick={() => {
@@ -224,12 +235,16 @@ export default function Navbar() {
                         "flex min-h-14 items-center justify-between rounded-md px-2 text-lg font-medium transition-colors hover:bg-background-elevated",
                         activeSection === link.href.slice(1) ? "text-accent" : "text-foreground",
                       )}
+                      variants={reducedMotion ? undefined : {
+                        closed: { opacity: 0, y: 10 },
+                        open: { opacity: 1, y: 0, transition: { duration: motionTokens.duration.support, ease: motionTokens.ease.reveal } },
+                      }}
                     >
                       {link.label}
                       <ArrowRight size={15} aria-hidden="true" />
-                    </a>
+                    </motion.a>
                   ))}
-                </nav>
+                </motion.nav>
                 <div className="mt-4 flex items-center gap-2 border-t border-border pt-4">
                   <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="icon-button">
                     <FaGithub size={20} aria-hidden="true" />

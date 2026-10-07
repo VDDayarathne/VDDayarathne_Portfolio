@@ -15,18 +15,20 @@ export default function SectionHeading({
   align?: "left" | "center";
 }) {
   return (
-    <Reveal className={cn("section-heading", align === "center" && "mx-auto text-center")}>
-      <div className={cn("eyebrow flex items-center gap-3 text-muted", align === "center" && "justify-center")}>
-        <span className="text-accent">{index}</span>
-        <span aria-hidden="true" className="h-px w-7 bg-border" />
-        <span>{eyebrow}</span>
-      </div>
-      <h2 className="section-title text-foreground">{title}</h2>
+    <div className={cn("section-heading", align === "center" && "mx-auto text-center")}>
+      <Reveal preset="fade" className={cn("section-kicker eyebrow flex items-center gap-3 text-muted", align === "center" && "justify-center")}>
+          <span className="text-accent">{index}</span>
+          <span aria-hidden="true" className="section-heading-rule h-px w-7 bg-border" />
+          <span>{eyebrow}</span>
+      </Reveal>
+      <Reveal preset="heading" delay={0.04} className="section-title-wrap">
+        <h2 className="section-title text-foreground">{title}</h2>
+      </Reveal>
       {description && (
-        <p className={cn("body-copy section-description", align === "center" && "mx-auto")}>
-          {description}
-        </p>
+        <Reveal preset="support" delay={0.1} className={cn("section-description", align === "center" && "mx-auto")}>
+          <p className="body-copy">{description}</p>
+        </Reveal>
       )}
-    </Reveal>
+    </div>
   );
 }

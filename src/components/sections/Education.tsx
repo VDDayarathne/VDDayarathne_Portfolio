@@ -10,11 +10,12 @@ import {
 } from "@/data/profile";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
+import ScrollHandoff from "@/components/ui/ScrollHandoff";
 
 export default function Education() {
   return (
     <section id="education" className="section">
-      <div className="site-container">
+      <ScrollHandoff className="site-container">
         <SectionHeading
           index="05"
           eyebrow="Education & Leadership"
@@ -28,14 +29,14 @@ export default function Education() {
               <SubHeading icon={GraduationCap} label="Education" />
               <div className="mt-5 space-y-4">
                 {education.map((edu) => (
-                  <Reveal key={edu.school}>
+                  <Reveal key={edu.school} preset="card">
                     <EducationCard edu={edu} />
                   </Reveal>
                 ))}
               </div>
             </div>
 
-            <Reveal>
+            <Reveal preset="support">
               <div className="education-note">
                 <SubHeading icon={BookOpen} label="Extracurricular" />
                 <ul className="detail-list body-copy mt-5">
@@ -49,14 +50,14 @@ export default function Education() {
             <SubHeading icon={Users} label="Leadership & Volunteering" />
             <div className="mt-5 space-y-4">
               {leadership.map((role) => (
-                <Reveal key={role.title}>
+                <Reveal key={role.title} preset="card">
                   <LeadershipCard role={role} />
                 </Reveal>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </ScrollHandoff>
     </section>
   );
 }

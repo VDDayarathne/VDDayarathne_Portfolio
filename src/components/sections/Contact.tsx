@@ -5,8 +5,9 @@ import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { profile } from "@/data/profile";
 import SectionHeading from "@/components/ui/SectionHeading";
-import Reveal from "@/components/ui/Reveal";
+import Reveal, { StaggerGroup, StaggerItem } from "@/components/ui/Reveal";
 import Button from "@/components/ui/Button";
+import ScrollHandoff from "@/components/ui/ScrollHandoff";
 
 const contactCards = [
   { icon: Mail, label: "Email", value: profile.email, href: `mailto:${profile.email}` },
@@ -26,11 +27,11 @@ export default function Contact() {
 
   return (
     <section id="contact" className="section">
-      <div className="site-container">
+      <ScrollHandoff preset="closing" className="site-container">
         <SectionHeading index="06" eyebrow="Contact" title="Good software starts with a conversation."
           description="Open to new opportunities, collaborations, and interesting problems. Reach out — I usually reply within a day." />
         <div className="section-content grid grid-cols-1 gap-8 lg:grid-cols-5">
-          <Reveal className="space-y-3 lg:col-span-2">
+          <StaggerGroup className="space-y-3 lg:col-span-2" stagger={0.055}>
             {contactCards.map((card) => {
               const Icon = card.icon;
               const content = <>
@@ -40,16 +41,16 @@ export default function Contact() {
                   <p className="mt-1 break-words text-sm font-medium">{card.value}</p>
                 </div>
               </>;
-              return card.href ? (
-                <a key={card.label} href={card.href} className="contact-card transition-colors hover:border-accent">{content}</a>
-              ) : <div key={card.label} className="contact-card">{content}</div>;
+              return <StaggerItem key={card.label} preset="support">{card.href ? (
+                <a href={card.href} data-cursor="link" className="contact-card transition-colors hover:border-accent">{content}</a>
+              ) : <div className="contact-card">{content}</div>}</StaggerItem>;
             })}
-            <div className="flex items-center gap-3 pt-3">
-              <a href={profile.github} target="_blank" rel="noreferrer" className="icon-button" aria-label="GitHub"><FaGithub size={18} aria-hidden="true" /></a>
-              <a href={profile.linkedin} target="_blank" rel="noreferrer" className="icon-button" aria-label="LinkedIn"><FaLinkedin size={18} aria-hidden="true" /></a>
-            </div>
-          </Reveal>
-          <Reveal className="lg:col-span-3" delay={0.06}>
+            <StaggerItem preset="fade" className="flex items-center gap-3 pt-3">
+              <a href={profile.github} target="_blank" rel="noreferrer" className="icon-button" data-cursor="button" aria-label="GitHub"><FaGithub size={18} aria-hidden="true" /></a>
+              <a href={profile.linkedin} target="_blank" rel="noreferrer" className="icon-button" data-cursor="button" aria-label="LinkedIn"><FaLinkedin size={18} aria-hidden="true" /></a>
+            </StaggerItem>
+          </StaggerGroup>
+          <Reveal preset="major" className="lg:col-span-3" delay={0.08}>
             <form onSubmit={handleSubmit} className="contact-form space-y-6">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
@@ -73,7 +74,7 @@ export default function Contact() {
             </form>
           </Reveal>
         </div>
-      </div>
+      </ScrollHandoff>
     </section>
   );
 }
