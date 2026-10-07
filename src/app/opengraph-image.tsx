@@ -15,28 +15,26 @@ export default function OGImage() {
           flexDirection: "column",
           justifyContent: "center",
           padding: "80px",
-          background: "radial-gradient(circle at 20% 20%, #171225 0%, #05050a 60%)",
-          color: "#f3f2fa",
+          background: "#f6f7f5",
+          color: "#182b30",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", fontSize: 26, color: "#22d3ee", letterSpacing: 4 }}>
+        <div style={{ display: "flex", fontSize: 26, color: "#245e66", letterSpacing: 3 }}>
           SOFTWARE ENGINEER · SRI LANKA
         </div>
         <div
           style={{
             display: "flex",
-            fontSize: 96,
-            fontWeight: 700,
+            fontSize: 80,
+            fontWeight: 600,
             marginTop: 24,
-            background: "linear-gradient(120deg, #ffffff 20%, #22d3ee 55%, #8b5cf6 85%)",
-            backgroundClip: "text",
-            color: "transparent",
+            letterSpacing: -3,
           }}
         >
           {profile.name}
         </div>
-        <div style={{ display: "flex", fontSize: 32, marginTop: 24, color: "#8f8ca3", maxWidth: 900 }}>
+        <div style={{ display: "flex", fontSize: 30, lineHeight: 1.5, marginTop: 24, color: "#43565c", maxWidth: 950 }}>
           {profile.tagline}
         </div>
       </div>

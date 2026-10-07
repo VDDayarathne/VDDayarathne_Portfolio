@@ -1,63 +1,78 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
+/** Original white difference-blend cursor, with demand-driven spring motion. */
 export default function CustomCursor() {
-  const [enabled, setEnabled] = useState(false);
-  const [hovering, setHovering] = useState(false);
-  const [visible, setVisible] = useState(false);
-
+  const cursor = useRef<HTMLDivElement>(null);
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
   const springX = useSpring(x, { stiffness: 500, damping: 40, mass: 0.5 });
   const springY = useSpring(y, { stiffness: 500, damping: 40, mass: 0.5 });
 
   useEffect(() => {
-    // Deliberate mount-only client capability check (fine pointer + no
-    // reduced-motion). Runs after hydration so the SSR/client markup
-    // matches on first paint; the cursor then fades in via `visible`.
-    const fine = window.matchMedia("(pointer: fine)").matches;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEnabled(fine && !reduced);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("cursor-none", enabled);
-    return () => document.documentElement.classList.remove("cursor-none");
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!enabled) return;
-
-    const move = (e: MouseEvent) => {
-      x.set(e.clientX - 16);
-      y.set(e.clientY - 16);
-      if (!visible) setVisible(true);
+    const element = cursor.current;
+    if (!element) return;
+    const fine = matchMedia("(hover: hover) and (pointer: fine)");
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    let listening = false;
+    let visible = false;
+    const hide = () => {
+      visible = false;
+      element.dataset.visible = "false";
+      document.documentElement.classList.remove("cursor-active");
     };
-    const over = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;21
-      setHovering(!!target.closest("a, button, [data-cursor-hover]"));
+    const move = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") { hide(); return; }
+      x.set(event.clientX - 16);
+      y.set(event.clientY - 16);
+      if (!visible) {
+        springX.jump(event.clientX - 16);
+        springY.jump(event.clientY - 16);
+        element.dataset.visible = "true";
+        document.documentElement.classList.add("cursor-active");
+        visible = true;
+      }
     };
-
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseover", over);
+    const over = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      element.dataset.hover = String(Boolean(target.closest('a[href], button:not(:disabled), [data-cursor-hover]')));
+      element.dataset.text = String(Boolean(target.closest('input, textarea, [contenteditable="true"]')));
+    };
+    const key = (event: KeyboardEvent) => { if (event.key === "Tab") hide(); };
+    const visibility = () => { if (document.hidden) hide(); };
+    const detach = () => {
+      hide();
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerover", over);
+      document.documentElement.removeEventListener("pointerleave", hide);
+      window.removeEventListener("blur", hide);
+      window.removeEventListener("keydown", key);
+      document.removeEventListener("visibilitychange", visibility);
+      listening = false;
+    };
+    const configure = () => {
+      if (listening) detach();
+      if (!fine.matches || reduced.matches) { hide(); return; }
+      window.addEventListener("pointermove", move, { passive: true });
+      window.addEventListener("pointerover", over, { passive: true });
+      document.documentElement.addEventListener("pointerleave", hide);
+      window.addEventListener("blur", hide);
+      window.addEventListener("keydown", key);
+      document.addEventListener("visibilitychange", visibility);
+      listening = true;
+    };
+    configure();
+    fine.addEventListener("change", configure);
+    reduced.addEventListener("change", configure);
     return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseover", over);
+      detach();
+      fine.removeEventListener("change", configure);
+      reduced.removeEventListener("change", configure);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [x, y, springX, springY]);
 
-  if (!enabled) return null;
-
-  return (
-    <motion.div
-      style={{ translateX: springX, translateY: springY }}
-      animate={{ scale: hovering ? 2.2 : 1, opacity: visible ? 1 : 0 }}
-      transition={{ scale: { type: "spring", stiffness: 300, damping: 20 } }}
-      className="pointer-events-none fixed left-0 top-0 z-[100] h-8 w-8 rounded-full bg-white mix-blend-difference"
-    />
-  );
+  return <motion.div ref={cursor} aria-hidden="true" data-custom-cursor="" className="custom-cursor" style={{ x: springX, y: springY }}><span /></motion.div>;
 }

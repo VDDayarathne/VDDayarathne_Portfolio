@@ -1,7 +1,9 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import { createRevealVariants, motionTokens } from "@/lib/motion";
 
 type RevealProps = {
   children: ReactNode;
@@ -12,59 +14,50 @@ type RevealProps = {
   once?: boolean;
 };
 
-const base: Variants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1 },
-};
-
 export default function Reveal({
   children,
   className,
   delay = 0,
-  y = 28,
+  y = motionTokens.distance,
+  as = "div",
   once = true,
 }: RevealProps) {
-  const variants: Variants = {
-    hidden: { opacity: 0, y },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] },
-    },
-  };
+  const reduced = useReducedMotion() === true;
+  const Component = as === "span" ? motion.span : motion.div;
 
   return (
-    <motion.div
-      initial="hidden"
+    <Component
+      initial={false}
       whileInView="show"
-      viewport={{ once, amount: 0.2 }}
-      variants={variants}
-      className={className}
+      viewport={{ once, amount: 0.15 }}
+      variants={createRevealVariants({ reduced, delay, distance: y })}
+      className={cn("reveal", className)}
     >
       {children}
-    </motion.div>
+    </Component>
   );
 }
 
 export function StaggerGroup({
   children,
   className,
-  stagger = 0.1,
+  stagger = motionTokens.stagger,
 }: {
   children: ReactNode;
   className?: string;
   stagger?: number;
 }) {
+  const reduced = useReducedMotion() === true;
+
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       whileInView="show"
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={{ once: true, amount: 0.15 }}
       variants={{
-        hidden: {},
-        show: { transition: { staggerChildren: stagger } },
+        show: { transition: { staggerChildren: reduced ? 0 : stagger } },
       }}
-      className={className}
+      className={cn("stagger-group", className)}
     >
       {children}
     </motion.div>
@@ -74,23 +67,25 @@ export function StaggerGroup({
 export function StaggerItem({
   children,
   className,
-  y = 24,
+  y = motionTokens.distance,
 }: {
   children: ReactNode;
   className?: string;
   y?: number;
 }) {
+  const reduced = useReducedMotion() === true;
+
   return (
     <motion.div
-      variants={{
-        hidden: { opacity: 0, y },
-        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-      }}
-      className={className}
+      variants={createRevealVariants({ reduced, distance: y })}
+      className={cn("stagger-item", className)}
     >
       {children}
     </motion.div>
   );
 }
 
-export { base as baseVariants };
+export const baseVariants: Variants = {
+  hidden: { opacity: 1 },
+  show: { opacity: [0, 1], transition: { duration: motionTokens.duration.reveal } },
+};

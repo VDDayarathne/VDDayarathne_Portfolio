@@ -13,9 +13,8 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 16,
-          background: "linear-gradient(135deg, #05050a 0%, #171225 100%)",
-          border: "2px solid rgba(139,92,246,0.6)",
+          borderRadius: 12,
+          background: "#245e66",
         }}
       >
         <div
@@ -24,9 +23,7 @@ export default function Icon() {
             fontSize: 30,
             fontWeight: 700,
             fontFamily: "sans-serif",
-            background: "linear-gradient(120deg, #ffffff 20%, #22d3ee 60%, #8b5cf6 100%)",
-            backgroundClip: "text",
-            color: "transparent",
+            color: "#ffffff",
           }}
         >
           VD

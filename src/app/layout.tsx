@@ -1,33 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Fraunces, Bodoni_Moda } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/providers/SmoothScroll";
-import BackgroundLayer from "@/components/three/BackgroundLayer";
+import ScrollSequenceBackground from "@/components/backgrounds/ScrollSequenceBackground";
+import { getBackgroundFrames } from "@/lib/background-sequence";
 import ScrollProgress from "@/components/layout/ScrollProgress";
-import CustomCursor from "@/components/layout/CustomCursor";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { profile } from "@/data/profile";
+import MotionProvider from "@/components/providers/MotionProvider";
+import CustomCursor from "@/components/layout/CustomCursor";
 
 const inter = localFont({
   src: "./fonts/Inter-Variable.woff2",
   variable: "--font-inter",
   weight: "100 900",
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-const bodoniModa = Bodoni_Moda({
-  subsets: ["latin"],
-  variable: "--font-bodoni",
-  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -61,31 +48,36 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05050a",
-  colorScheme: "dark",
+  themeColor: "#f6f7f5",
+  colorScheme: "light",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const backgroundFrames = await getBackgroundFrames();
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${fraunces.variable} ${bodoniModa.variable} dark h-full antialiased`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <SmoothScroll>
-          <BackgroundLayer />
-          <div className="grain" aria-hidden="true" />
-          <CustomCursor />
-          <ScrollProgress />
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </SmoothScroll>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <head>
+        {backgroundFrames[0] && (
+          <link rel="preload" as="image" href={backgroundFrames[0]} fetchPriority="high" />
+        )}
+      </head>
+      <body className="isolate min-h-full flex flex-col bg-background text-foreground">
+        <a className="skip-link" href="#main-content">Skip to content</a>
+        <MotionProvider>
+          <SmoothScroll>
+            <ScrollSequenceBackground frames={backgroundFrames} />
+            <div className="background-veil" aria-hidden="true" />
+            <ScrollProgress />
+            <CustomCursor />
+            <Navbar />
+            <main id="main-content" tabIndex={-1} className="relative z-10 flex-1">{children}</main>
+            <div className="relative z-10"><Footer /></div>
+          </SmoothScroll>
+        </MotionProvider>
       </body>
     </html>
   );
