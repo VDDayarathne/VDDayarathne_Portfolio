@@ -74,7 +74,40 @@ class Connection {
 }
 
 const instrumentation = `(() => {
-  const probe = window.__backgroundProbe = { contexts: [], draws: 0, last: null, blankDraws: 0, bitmapCalls: 0, bitmapBytes: 0, peakBitmapBytes: 0, rafCallbacks: 0, touchEvents: [] };
+  const probe = window.__backgroundProbe = { contexts: [], draws: 0, last: null, blankDraws: 0, bitmapCalls: 0, bitmapBytes: 0, peakBitmapBytes: 0, rafCallbacks: 0, touchEvents: [], introSamples: [], layoutShift: 0 };
+  try {
+    new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) if (!entry.hadRecentInput) probe.layoutShift += entry.value;
+    }).observe({type:"layout-shift",buffered:true});
+  } catch { /* Layout shift observation is optional in older Chromium. */ }
+  const sampleIntro = delay => {
+    const items=[...document.querySelectorAll("[data-intro]")].map(element => {
+      const style=getComputedStyle(element);
+      return {opacity:Number(style.opacity),transform:style.transform};
+    });
+    if (items.length) probe.introSamples.push({delay,items});
+  };
+  const introObserver = new MutationObserver(() => {
+    if (!document.querySelector("[data-intro]")) return;
+    sampleIntro("parsed");
+    introObserver.disconnect();
+  });
+  introObserver.observe(document,{childList:true,subtree:true});
+  document.addEventListener("DOMContentLoaded", () => {
+    for (const delay of [0,200,700,1900]) setTimeout(() => {
+      sampleIntro(delay);
+    },delay);
+    const sampleSettled = () => setTimeout(() => sampleIntro("settled"),1700);
+    if (document.documentElement.classList.contains("motion-started")) sampleSettled();
+    else {
+      const motionObserver = new MutationObserver(() => {
+        if (!document.documentElement.classList.contains("motion-started")) return;
+        motionObserver.disconnect();
+        sampleSettled();
+      });
+      motionObserver.observe(document.documentElement,{attributes:true,attributeFilter:["class"]});
+    }
+  },{once:true});
   const originalRaf = window.requestAnimationFrame;
   window.requestAnimationFrame = callback => originalRaf.call(window,time => {probe.rafCallbacks++;callback(time);});
   for (const type of ["touchstart","touchmove","touchend"]) {
@@ -233,10 +266,15 @@ function verifyCanvas(state, label) {
   assert(effectiveDpr >= 1 && effectiveDpr <= state.viewport.dpr + 0.01, `${label}: backing resolution respects DPR`);
 }
 
-async function scrollToFrame(cdp, fraction, expectedIndex = Math.round(fraction * (files.length - 1)), timeout = 15_000) {
+async function scrollToFrame(cdp, fraction, expectedIndex = null, timeout = 15_000) {
   await cdp.evaluate(`window.scrollTo({top: (document.documentElement.scrollHeight - innerHeight) * ${fraction}, behavior: "instant"})`);
-  return until(() => snapshot(cdp), (state) => state.last && frameNumber(state.last.src) === expectedIndex,
-    `Scroll ${fraction} reaches frame ${expectedIndex}`, timeout);
+  return until(() => snapshot(cdp), (state) => {
+    if (!state.last) return false;
+    const mappedIndex = Math.round((state.scrollY / Math.max(1, state.scrollRange)) * (files.length - 1));
+    const targetIndex = Number(state.data.targetFrameIndex);
+    const resolvedIndex = expectedIndex ?? targetIndex;
+    return Math.abs(targetIndex - mappedIndex) <= 1 && frameNumber(state.last.src) === resolvedIndex;
+  }, `Scroll ${fraction} reaches ${expectedIndex == null ? "its mapped frame" : `frame ${expectedIndex}`}`, timeout);
 }
 
 async function waitForScrollToSettle(cdp) {
@@ -256,9 +294,15 @@ async function click(cdp, selector) {
     if (!rect || rect.width === 0 || rect.height === 0) return null;
     const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
     const hit = document.elementFromPoint(x,y);
-    return {x,y,reachable: element === hit || element.contains(hit)};
+    return {
+      x,y,
+      reachable: element === hit || element.contains(hit),
+      rect: {x:rect.x,y:rect.y,width:rect.width,height:rect.height},
+      viewport: {width:innerWidth,height:innerHeight},
+      hit: hit ? {tag:hit.tagName,id:hit.id,className:String(hit.className)} : null,
+    };
   })()`);
-  assert(point?.reachable, `${selector}: content is above the background and reachable`);
+  assert(point?.reachable, `${selector}: content is above the background and reachable (${JSON.stringify(point)})`);
   await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x: point.x, y: point.y, button: "left", clickCount: 1 });
   await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", x: point.x, y: point.y, button: "left", clickCount: 1 });
 }
@@ -402,7 +446,21 @@ async function verifyInteractions() {
   await cdp.send("Emulation.setDeviceMetricsOverride",{width:1440,height:900,deviceScaleFactor:1,mobile:false});
   await cdp.send("Page.navigate",{url:origin});
   await until(()=>snapshot(cdp),state=>Boolean(state.last),"Interaction page ready");
-  await sleep(500);
+  await until(
+    ()=>cdp.evaluate("window.__backgroundProbe.introSamples.find(sample=>sample.delay==='settled')"),
+    Boolean,
+    "Opening sequence settles",
+  );
+  const opening=await cdp.evaluate("({samples:window.__backgroundProbe.introSamples,layoutShift:window.__backgroundProbe.layoutShift,started:document.documentElement.classList.contains('motion-started')})");
+  assert(opening.started,"Opening sequence waits for the local font before starting");
+  assert(opening.samples[0].items.length>=5,"Navigation and hero participate in one opening sequence");
+  assert(
+    opening.samples.slice(0,3).some(sample=>sample.items.some(item=>item.opacity<0.5)),
+    `Opening elements are prepared before their entrance: ${JSON.stringify(opening.samples.slice(0,3))}`,
+  );
+  assert(opening.samples.at(-1).items.every(item=>item.opacity>0.98),"Opening sequence settles with all content visible");
+  assert(opening.layoutShift<0.05,`Opening animation avoids layout shifts: ${opening.layoutShift}`);
+  assert(await cdp.evaluate("document.querySelectorAll('[data-scroll-handoff]').length>=15"),"Sections, rows, projects, and footer share the scroll handoff system");
   await cdp.send("Input.dispatchMouseEvent",{type:"mouseMoved",x:240,y:200});
   await until(()=>cdp.evaluate("document.querySelector('[data-custom-cursor]')?.dataset.visible"),value=>value==="true","Mouse activates the restored cursor");
   assert.equal(await cdp.evaluate("getComputedStyle(document.querySelector('[data-custom-cursor]')).mixBlendMode"),"difference","Original cursor blend identity is retained");
@@ -412,6 +470,7 @@ async function verifyInteractions() {
   await cdp.send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   await until(()=>cdp.evaluate("document.documentElement.classList.contains('cursor-active')"),value=>!value,"Reduced motion restores the native cursor");
   assert.equal(await cdp.evaluate("getComputedStyle(document.querySelector('[data-custom-cursor]')).display"),"none","Reduced motion hides the custom cursor");
+  assert(await cdp.evaluate("[...document.querySelectorAll('[data-scroll-handoff]')].every(item=>{const style=getComputedStyle(item);return style.opacity==='1'&&style.transform==='none'})"),"Reduced motion removes scroll-linked handoff transforms");
   await cdp.send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"no-preference"}]});
   await cdp.evaluate("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
   await cdp.send("Input.dispatchMouseEvent",{type:"mouseMoved",x:241,y:201});
@@ -425,6 +484,7 @@ async function verifyInteractions() {
   const anchor = await cdp.evaluate("({top:document.getElementById('about').getBoundingClientRect().top,focus:document.activeElement.id})");
   assert(anchor.top>=80 && anchor.top<=130,"Anchor clears the fixed header");
   assert.equal(anchor.focus,"about","Desktop anchor moves keyboard focus to its section");
+  assert(await cdp.evaluate("Number(getComputedStyle(document.querySelector('[data-scroll-handoff=hero]')).opacity)<0.9"),"Hero de-emphasizes as the next section takes priority");
   await cdp.evaluate("history.back()");
   await until(()=>cdp.evaluate("location.hash"),hash=>hash==="","Back restores the prior URL");
   await waitForScrollToSettle(cdp);
@@ -461,6 +521,7 @@ async function verifyInteractions() {
   await mobile.send("Page.navigate",{url:origin});
   await until(()=>snapshot(mobile),state=>Boolean(state.last),"Mobile interaction page ready");
   assert.equal(await mobile.evaluate("getComputedStyle(document.querySelector('[data-custom-cursor]')).display"),"none","Touch devices use the native cursor");
+  assert(await mobile.evaluate("[...document.querySelectorAll('[data-scroll-handoff]')].every(item=>{const style=getComputedStyle(item);return style.opacity==='1'&&style.transform==='none'})"),"Mobile keeps section handoffs immediate and lightweight");
   await click(mobile,'button[aria-label="Toggle menu"]');
   await until(()=>mobile.evaluate("Boolean(document.querySelector('[role=dialog]')?.contains(document.activeElement))"),Boolean,"Menu moves focus inside");
   await mobile.evaluate("document.querySelector('[role=dialog] a[aria-label=Email]').focus()");

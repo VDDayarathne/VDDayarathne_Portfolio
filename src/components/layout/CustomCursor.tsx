@@ -38,7 +38,9 @@ export default function CustomCursor() {
     const over = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      element.dataset.hover = String(Boolean(target.closest('a[href], button:not(:disabled), [data-cursor-hover]')));
+      const interactive = target.closest<HTMLElement>('a[href], button:not(:disabled), [data-cursor-hover], [data-cursor]');
+      element.dataset.hover = String(Boolean(interactive));
+      element.dataset.kind = interactive?.dataset.cursor ?? (interactive ? "link" : "default");
       element.dataset.text = String(Boolean(target.closest('input, textarea, [contenteditable="true"]')));
     };
     const key = (event: KeyboardEvent) => { if (event.key === "Tab") hide(); };
