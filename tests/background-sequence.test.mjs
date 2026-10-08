@@ -54,6 +54,27 @@ test("discovers regular JPEG files in numeric order and encodes public URLs", as
   }
 });
 
+test("uses the configured base path for exported GitHub Pages deployments", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "portfolio-basepath-"));
+  const previousBasePath = process.env.NEXT_PUBLIC_BASE_PATH;
+
+  try {
+    process.env.NEXT_PUBLIC_BASE_PATH = "/VDDayarathne_Portfolio";
+    await writeFile(path.join(directory, "frame_1.jpg"), "fixture");
+
+    assert.deepEqual(await getBackgroundFrames({ directory }), [
+      "/VDDayarathne_Portfolio/images/Background/frame_1.jpg",
+    ]);
+  } finally {
+    if (previousBasePath === undefined) {
+      delete process.env.NEXT_PUBLIC_BASE_PATH;
+    } else {
+      process.env.NEXT_PUBLIC_BASE_PATH = previousBasePath;
+    }
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("empty or missing frame directories return an empty sequence", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "portfolio-empty-"));
 

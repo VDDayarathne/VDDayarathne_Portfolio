@@ -13,12 +13,15 @@ const filenameOrder = new Intl.Collator("en", {
   sensitivity: "base",
 });
 
+function resolveBasePath(): string {
+  return process.env.NEXT_PUBLIC_BASE_PATH ?? (process.env.NODE_ENV === "production" ? "/VDDayarathne_Portfolio" : "");
+}
+
 /** Discover public assets on the server; only their URLs reach the browser. */
 export async function getBackgroundFrames(
   {
     directory = path.join(process.cwd(), "public", "images", "Background"),
-    // The current Next config has no basePath. Pass it here if one is added.
-    basePath = "",
+    basePath = resolveBasePath(),
   }: BackgroundFrameOptions = {},
 ): Promise<string[]> {
   let entries;
