@@ -39,6 +39,9 @@ export default function ScrollSequenceBackground({ frames }: { frames: readonly 
 
     const cache = new BackgroundFrameCache(frames, schedule);
     cache.setStaticMode(reducedMotion);
+    // Begin decoding the opening direction immediately, before the first paint
+    // callback, so the first scroll has nearby frames ready to draw.
+    if (!reducedMotion) cache.prioritize(0, 1);
 
     const render = (time: number) => {
       rafId = 0;

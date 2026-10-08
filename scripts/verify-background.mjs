@@ -492,6 +492,19 @@ async function verifyMotionJourney() {
     const hidden=await cdp.evaluate(`[...document.querySelectorAll('#${id} .reveal,#${id} .stagger-item')].filter(e=>{const r=e.getBoundingClientRect();return r.bottom>120&&r.top<innerHeight*.8&&Number(getComputedStyle(e).opacity)<.95}).map(e=>e.className)`);
     assert.deepEqual(hidden,[],`${id}: content remains visible on forward and reverse scroll`);
   }
+  // Once a reveal leaves view it prepares offscreen, then plays again on return.
+  await cdp.evaluate("document.getElementById('experience').scrollIntoView({behavior:'instant',block:'start'})");
+  await sleep(250);
+  assert(
+    Number(await cdp.evaluate("getComputedStyle(document.querySelector('#about .section-title-wrap')).opacity")) < .1,
+    "About heading prepares after leaving the viewport",
+  );
+  await cdp.evaluate("document.getElementById('about').scrollIntoView({behavior:'instant',block:'start'})");
+  await sleep(900);
+  assert(
+    Number(await cdp.evaluate("getComputedStyle(document.querySelector('#about .section-title-wrap')).opacity")) > .95,
+    "About heading replays and settles after returning to the viewport",
+  );
   await cdp.evaluate("document.getElementById('projects').scrollIntoView({behavior:'instant'})");
   await sleep(1100);
   const before=await cdp.evaluate('scrollY');

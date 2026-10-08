@@ -69,6 +69,9 @@ export default async function RootLayout({
         {backgroundFrames[0] && (
           <link rel="preload" as="image" href={backgroundFrames[0]} fetchPriority="high" />
         )}
+        {backgroundFrames[1] && (
+          <link rel="prefetch" as="image" href={backgroundFrames[1]} />
+        )}
       </head>
       <body className="isolate min-h-full flex flex-col bg-background text-foreground">
         <a className="skip-link" href="#main-content">Skip to content</a>

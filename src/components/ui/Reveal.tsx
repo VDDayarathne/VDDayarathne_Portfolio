@@ -15,10 +15,13 @@ const getCompactSnapshot = () => window.matchMedia(compactQuery).matches;
 const compactDistance = (preset: MotionPreset) =>
   preset === "fade" ? 0 : ["major", "heading", "project", "intro"].includes(preset) ? 16 : 10;
 
-function useRevealPlayback(reduced: boolean, amount: number, once = true) {
+function useRevealPlayback(reduced: boolean, amount: number, once = false) {
   const ref = useRef<HTMLDivElement & HTMLSpanElement>(null);
   const controls = useAnimationControls();
-  const visible = useInView(ref, { once, amount, margin: motionTokens.viewport.margin });
+  const hasEntered = useRef(false);
+  // Keep observing after the first entrance so content can prepare offscreen
+  // and replay when a visitor scrolls through a section again.
+  const visible = useInView(ref, { once: false, amount, margin: motionTokens.viewport.margin });
   useLayoutEffect(() => {
     // Never hide content already visible at a restored scroll position.
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && ref.current && ref.current.getBoundingClientRect().top > innerHeight) {
@@ -26,8 +29,17 @@ function useRevealPlayback(reduced: boolean, amount: number, once = true) {
     }
   }, [controls]);
   useEffect(() => {
-    if (visible || reduced) void controls.start("show");
-  }, [controls, visible, reduced]);
+    if (reduced) {
+      controls.set("show");
+      return;
+    }
+    if (visible) {
+      hasEntered.current = true;
+      void controls.start("show");
+    } else if (!once && hasEntered.current) {
+      controls.set("prepared");
+    }
+  }, [controls, visible, reduced, once]);
   return [ref, controls] as const;
 }
 
@@ -52,7 +64,7 @@ export default function Reveal({
   delay = 0,
   y,
   as = "div",
-  once = true,
+  once = false,
   preset = "support",
   amount = motionTokens.viewport.amount,
 }: RevealProps) {

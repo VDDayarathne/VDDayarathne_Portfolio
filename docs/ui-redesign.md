@@ -122,8 +122,8 @@ movement, disables the custom cursor and Lenis, and freezes the background.
 
 The October 2026 motion audit changed reveals to scalar animation targets.
 Only content below the viewport is prepared after hydration; content at a restored
-reading position stays visible. Reverse scrolling and live preference changes no
-longer restart zero-opacity keyframes. The heading overflow mask remains, while
+reading position stays visible. Once a reveal leaves the viewport, it prepares
+offscreen and replays on each later entry, including reverse scrolling. The heading overflow mask remains, while
 the observed element avoids a fully closed clip-path that could prevent its own
 IntersectionObserver from ever triggering. Mobile fade-only presets have zero
 travel. Scroll handoff subscriptions detach on coarse pointers, small screens,
@@ -132,7 +132,7 @@ handoffs start at full emphasis.
 
 The `--motion-only` browser check covers slow and fast full-page scrolling,
 reverse scrolling, small wheel deltas approximating trackpad input, native
-scrollbar dragging, readable settled content, and mid-page reload. It records
+scrollbar dragging, repeat reveal playback, readable settled content, and mid-page reload. It records
 frame intervals, long tasks, and layout shift in `motion.json`. These headless
 measurements are diagnostic and do not establish a physical-device 60 FPS guarantee.
 
