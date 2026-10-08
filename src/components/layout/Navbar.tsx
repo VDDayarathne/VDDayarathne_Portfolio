@@ -186,7 +186,7 @@ export default function Navbar() {
           data-intro=""
           style={{ "--intro-delay": "0.08s" } as CSSProperties}
           className={cn(
-            "nav-shell relative flex min-h-14 items-center justify-between gap-5 transition-[background-color,border-color,box-shadow,padding]",
+            "nav-shell relative flex min-h-14 items-center justify-between gap-5 transition-[min-height,background-color,border-color,border-radius,box-shadow,padding]",
             scrolled
               ? "nav-shell--scrolled"
               : "nav-shell--top",
@@ -230,7 +230,7 @@ export default function Navbar() {
             <a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="icon-button" data-cursor="button">
               <FaLinkedin size={17} aria-hidden="true" />
             </a>
-            <Button href="#contact" variant="primary" className="ml-2 min-h-10 px-4 text-xs">
+            <Button href="#contact" variant="primary" className="nav-cta ml-2 text-xs">
               Let&apos;s Talk <ArrowRight size={15} aria-hidden="true" />
             </Button>
           </div>
