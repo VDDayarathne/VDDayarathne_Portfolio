@@ -447,6 +447,23 @@ async function verifyMotionJourney() {
   await cdp.send('Page.navigate',{url:origin});
   await until(()=>snapshot(cdp),state=>Boolean(state.last),'Motion ready');
   await sleep(2500);
+  // High-frequency small wheel deltas approximate trackpad input without a second scroll owner.
+  for(let step=0;step<18;step++) {
+    await cdp.send('Input.dispatchMouseEvent',{type:'mouseWheel',x:700,y:400,deltaX:0,deltaY:28});
+    await sleep(16);
+  }
+  await waitForScrollToSettle(cdp);
+  assert((await cdp.evaluate('scrollY'))>100,'Small wheel/trackpad-style deltas scroll responsively');
+  await cdp.evaluate("scrollTo({top:0,behavior:'instant'})");
+  await sleep(300);
+  const bar=await cdp.evaluate("({x:(innerWidth+document.documentElement.clientWidth)/2,visible:innerWidth>document.documentElement.clientWidth})");
+  if(bar.visible) {
+    await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',x:bar.x,y:25,button:'left',buttons:1,clickCount:1});
+    await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:bar.x,y:400,button:'left',buttons:1});
+    await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:bar.x,y:400,button:'left',buttons:0,clickCount:1});
+    await waitForScrollToSettle(cdp);
+    assert((await cdp.evaluate('scrollY'))>100,'Native scrollbar dragging works');
+  }
   const timing=await cdp.evaluate(`(async()=>{
     const gaps=[], tasks=[];
     const observer=new PerformanceObserver(list=>tasks.push(...list.getEntries().map(e=>e.duration)));
@@ -623,7 +640,7 @@ async function verifyAppearanceOnly() {
     await cdp.send("Page.navigate",{url:origin});
     await until(()=>snapshot(cdp),state=>state.last && frameNumber(state.last.src)===0,`${name} first JPG appears`);
     await cdp.evaluate("document.fonts.ready");
-    await sleep(300);
+    await until(()=>cdp.evaluate("window.__backgroundProbe.introSamples.some(sample=>sample.delay==='settled')"),Boolean,`${name}: opening settles before visual capture`);
     verifyCanvas(await snapshot(cdp),`${name} canvas after palette changes`);
     const state = await appearanceState(cdp);
     const contrasts = verifyAppearance(state,name);

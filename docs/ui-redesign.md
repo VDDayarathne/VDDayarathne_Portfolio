@@ -120,12 +120,29 @@ movement, disables the custom cursor and Lenis, and freezes the background.
 
 ## Verification
 
+The October 2026 motion audit changed reveals to scalar animation targets.
+Only content below the viewport is prepared after hydration; content at a restored
+reading position stays visible. Reverse scrolling and live preference changes no
+longer restart zero-opacity keyframes. The heading overflow mask remains, while
+the observed element avoids a fully closed clip-path that could prevent its own
+IntersectionObserver from ever triggering. Mobile fade-only presets have zero
+travel. Scroll handoff subscriptions detach on coarse pointers, small screens,
+and reduced motion instead of continuing behind CSS overrides. Server-rendered
+handoffs start at full emphasis.
+
+The `--motion-only` browser check covers slow and fast full-page scrolling,
+reverse scrolling, small wheel deltas approximating trackpad input, native
+scrollbar dragging, readable settled content, and mid-page reload. It records
+frame intervals, long tasks, and layout shift in `motion.json`. These headless
+measurements are diagnostic and do not establish a physical-device 60 FPS guarantee.
+
 ```sh
 npm run lint
 npx tsc --noEmit
 node --test tests/*.test.mjs
 npm run build
-npm run start -- --port 3010
+python -m http.server 3010 --bind 127.0.0.1 --directory out
+node scripts/verify-background.mjs http://localhost:3010 --motion-only
 node scripts/verify-background.mjs http://localhost:3010 --appearance-only
 node scripts/verify-background.mjs http://localhost:3010
 ```
