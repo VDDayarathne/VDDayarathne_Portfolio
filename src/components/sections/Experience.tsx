@@ -7,8 +7,8 @@ export default function Experience() {
   return (
     <section id="experience" className="section">
       <ScrollHandoff className="site-container">
-        <SectionHeading index="02" eyebrow="Experience" title="Built in the real world."
-          description="Production experience across FinTech and banking domains — a path of growing ownership and craft." />
+        <SectionHeading index="02" eyebrow="Experience" title="Experience shaped by responsibility."
+          description="Professional roles spanning software engineering and banking, with growing ownership in production development." />
         <ol className="section-content experience-list">
           {experience.map((job, index) => (
             <li key={job.company + job.period}>

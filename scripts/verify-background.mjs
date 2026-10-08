@@ -390,9 +390,9 @@ function verifyAppearance(state,label) {
   assert(state.sectionHeadings.length>=6,`${label}: portfolio headings remain present`);
   for (const heading of state.sectionHeadings) {
     assert.equal(heading.color,ink,`${label}: section heading ${heading.text} uses dark ink`);
-    assert(heading.font.toLowerCase().includes("inter"),`${label}: section heading uses Inter`);
+    assert(/arial|helvetica/i.test(heading.font),`${label}: section heading uses a complete display-safe font`);
   }
-  assert(state.heading.font.toLowerCase().includes("inter"),`${label}: hero heading uses Inter`);
+  assert(/arial|helvetica/i.test(state.heading.font),`${label}: hero heading uses the complete display-safe font`);
   assert(state.body.font.toLowerCase().includes("inter"),`${label}: body keeps the Inter font`);
   assert.equal(state.primary.background,accent,`${label}: primary button uses the shared teal accent`);
   assert.equal(state.primary.color,"rgb(255, 255, 255)",`${label}: primary button has contrasting white text`);
@@ -538,7 +538,13 @@ async function verifyInteractions() {
   );
   assert(opening.samples.at(-1).items.every(item=>item.opacity>0.98),"Opening sequence settles with all content visible");
   assert(opening.layoutShift<0.05,`Opening animation avoids layout shifts: ${opening.layoutShift}`);
-  assert(await cdp.evaluate("document.querySelectorAll('[data-scroll-handoff]').length>=15"),"Sections, rows, projects, and footer share the scroll handoff system");
+  assert(await cdp.evaluate(`(() => {
+    const expected = document.querySelectorAll('main > section').length
+      + document.querySelectorAll('.experience-list > li').length
+      + document.querySelectorAll('.project-list > [data-scroll-handoff]').length
+      + 1;
+    return document.querySelectorAll('[data-scroll-handoff]').length >= expected;
+  })()`),"Sections, rows, projects, and footer share the scroll handoff system");
   await cdp.send("Input.dispatchMouseEvent",{type:"mouseMoved",x:240,y:200});
   await until(()=>cdp.evaluate("document.querySelector('[data-custom-cursor]')?.dataset.visible"),value=>value==="true","Mouse activates the restored cursor");
   assert.equal(await cdp.evaluate("getComputedStyle(document.querySelector('[data-custom-cursor]')).mixBlendMode"),"difference","Original cursor blend identity is retained");
@@ -579,7 +585,7 @@ async function verifyInteractions() {
   await click(cdp,'.skills-filter button:first-child');
   assert.equal(await cdp.evaluate("document.querySelectorAll('#technical-skills li').length"),content.skills.flatMap(item=>item.skills).length,"All restores the complete toolkit");
   assert.equal(await cdp.evaluate("document.querySelectorAll('#projects a[href=\"#\"]').length"),0,"Unavailable project URLs cannot jump to the top");
-  assert.equal(await cdp.evaluate("document.querySelector('#top a[href$=\".pdf\"]').getAttribute('href')"),content.profile.resumeUrl,"Existing CV link preserved");
+  assert(await cdp.evaluate(`Boolean(document.querySelector('#top a[href=${JSON.stringify(content.profile.resumeUrl)}]'))`),"CV request action is preserved");
   for (const url of [content.profile.github,content.profile.linkedin,`mailto:${content.profile.email}`,`tel:${content.profile.phone.replace(/\s/g,"")}`]) {
     assert(await cdp.evaluate(`Boolean(document.querySelector('a[href=${JSON.stringify(url)}]'))`),`Preserved contact action ${url}`);
   }

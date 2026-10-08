@@ -42,7 +42,6 @@ export default function ScrollHandoff({
   }, [preset, scrollYProgress, values]);
   const opacity = useTransform(scrollYProgress, values.input, values.opacity);
   const y = useTransform(scrollYProgress, values.input, values.y);
-  const scale = useTransform(scrollYProgress, values.input, values.scale);
   const x = useTransform(scrollYProgress, values.input, values.x.map((value) => value * direction));
 
   return (
@@ -50,7 +49,7 @@ export default function ScrollHandoff({
       ref={target}
       data-scroll-handoff={preset}
       className={cn("scroll-handoff", `scroll-handoff--${preset}`, className)}
-      style={{ opacity, x, y, scale }}
+      style={{ opacity, x, y }}
     >
       {children}
     </motion.div>

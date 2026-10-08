@@ -7,17 +7,17 @@ export default function About() {
   return (
     <section id="about" className="section">
       <ScrollHandoff className="site-container">
-        <SectionHeading index="01" eyebrow="About Me" title="Engineering software with intent." />
+        <SectionHeading index="01" eyebrow="About Me" title="Curious, adaptable, and ready to grow." />
         <div className="section-content about-grid">
           <Reveal preset="major" className="about-aside">
             <p className="eyebrow">Behind the code</p>
-            <p className="about-statement">Curious by nature.<br />Precise by practice.</p>
-            <p className="meta">{profile.roles[0]}<br />{profile.roles[2]}</p>
+            <p className="about-statement">Thoughtful in approach.<br />Committed in practice.</p>
+            <p className="meta">{profile.roles[0]}<br />{profile.roles[1]}</p>
             <dl className="about-facts">
               <div><dt>Based in</dt><dd>{profile.location}</dd></div>
               <div><dt>Currently</dt><dd>Associate Software Engineer at ZData Innovations</dd></div>
-              <div><dt>Studying</dt><dd>BSc (Hons) Software Engineering, Sabaragamuwa University of Sri Lanka</dd></div>
-              <div><dt>Core stack</dt><dd>Java · Spring Boot · React · Next.js · MySQL · MongoDB</dd></div>
+              <div><dt>Education</dt><dd>BSc (Hons) Software Engineering · Final results pending</dd></div>
+              <div><dt>Focus</dt><dd>Creating value, learning continuously, and growing through meaningful responsibility</dd></div>
             </dl>
           </Reveal>
           <div className="about-main">

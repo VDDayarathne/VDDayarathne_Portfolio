@@ -8,8 +8,8 @@ export default function Projects() {
   return (
     <section id="projects" className="section">
       <ScrollHandoff className="site-container">
-        <SectionHeading index="03" eyebrow="Selected Work" title="Ideas into working software."
-          description="Independent and collaborative builds. Backend architecture, full-stack products, and applied AI." />
+        <SectionHeading index="03" eyebrow="Selected Work" title="Ideas turned into useful software."
+          description="Collaborative projects that demonstrate practical problem-solving, ownership, and contribution across the development lifecycle." />
         <div className="section-content project-list">
           {projects.map((project, index) => (
             <ScrollHandoff key={project.title} preset="project" direction={index % 2 === 0 ? 1 : -1}>

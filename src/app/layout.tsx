@@ -27,8 +27,8 @@ export const metadata: Metadata = {
   keywords: [
     "Vishwa Dayarathne",
     "Software Engineer",
-    "Backend Developer",
-    "Spring Boot",
+    "Full-Stack Developer",
+    "Software Engineering Graduate",
     "Portfolio",
     "Sri Lanka",
   ],

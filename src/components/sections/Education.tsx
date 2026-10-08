@@ -19,8 +19,8 @@ export default function Education() {
         <SectionHeading
           index="05"
           eyebrow="Education & Leadership"
-          title="Where I've grown."
-          description="Academic foundation paired with leadership roles that sharpened how I collaborate and deliver under pressure."
+          title="A foundation for continuous growth."
+          description="Completed degree requirements supported by leadership and volunteering experience in collaborative student initiatives."
         />
 
         <div className="section-content education-grid grid items-start gap-8 lg:grid-cols-2 lg:gap-16">

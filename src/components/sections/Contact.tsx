@@ -28,8 +28,8 @@ export default function Contact() {
   return (
     <section id="contact" className="section">
       <ScrollHandoff preset="closing" className="site-container">
-        <SectionHeading index="06" eyebrow="Contact" title="Good software starts with a conversation."
-          description="Open to new opportunities, collaborations, and interesting problems. Reach out — I usually reply within a day." />
+        <SectionHeading index="06" eyebrow="Contact" title="Let's explore what we can build together."
+          description="I'm open to software engineering opportunities, collaborative work, and professional connections. If my experience could add value to your team, I'd be glad to hear from you." />
         <div className="section-content grid grid-cols-1 gap-8 lg:grid-cols-5">
           <StaggerGroup className="space-y-3 lg:col-span-2" stagger={0.055}>
             {contactCards.map((card) => {

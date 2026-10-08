@@ -19,8 +19,8 @@ export default function Skills() {
   return (
     <section id="skills" className="section">
       <ScrollHandoff className="site-container">
-        <SectionHeading index="04" eyebrow="Skills" title="My technical toolkit."
-          description="Languages, frameworks, and tools I use to take products from idea to production — tap a category to filter." />
+        <SectionHeading index="04" eyebrow="Skills" title="A balanced technical toolkit."
+          description="Programming languages, frameworks, databases, and development tools gained through academic and professional work select a category to filter." />
         <Reveal preset="support" className="section-content">
           <div className="skills-filter" role="group" aria-label="Filter technical skills">
             {categories.map((category) => (

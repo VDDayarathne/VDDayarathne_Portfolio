@@ -20,9 +20,15 @@ const links = [
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const scrolledRef = useRef(false);
+  const hiddenRef = useRef(false);
+  const lastScrollYRef = useRef(0);
+  const directionStartRef = useRef(0);
+  const directionRef = useRef<"up" | "down">("up");
   const toggleRef = useRef<HTMLButtonElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -33,11 +39,38 @@ export default function Navbar() {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const next = window.scrollY > 24;
+      const y = Math.max(0, window.scrollY);
+      const next = y > 24;
       if (next !== scrolledRef.current) {
         scrolledRef.current = next;
         setScrolled(next);
       }
+
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(scrollable > 0 ? Math.min(1, y / scrollable) : 0);
+
+      const delta = y - lastScrollYRef.current;
+      const direction = delta > 1 ? "down" : delta < -1 ? "up" : directionRef.current;
+      if (direction !== directionRef.current) {
+        directionRef.current = direction;
+        directionStartRef.current = y;
+      }
+
+      let nextHidden = hiddenRef.current;
+      if (y < 120) {
+        nextHidden = false;
+      } else if (direction === "up" && directionStartRef.current - y > 10) {
+        nextHidden = false;
+      } else if (direction === "down" && y > 240 && y - directionStartRef.current > 54) {
+        nextHidden = true;
+      }
+
+      if (nextHidden !== hiddenRef.current) {
+        hiddenRef.current = nextHidden;
+        setHidden(nextHidden);
+      }
+      lastScrollYRef.current = y;
+
     };
     const onScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -82,7 +115,7 @@ export default function Navbar() {
     restoreFocusRef.current = true;
     const previouslyLocked = root.classList.contains("noscroll");
     root.classList.add("noscroll");
-    const desktop = window.matchMedia("(min-width: 1024px)");
+    const desktop = window.matchMedia("(min-width: 1280px)");
 
     const focusFrame = window.requestAnimationFrame(() => {
       menu?.querySelector<HTMLAnchorElement>("nav a")?.focus({ preventScroll: true });
@@ -127,14 +160,33 @@ export default function Navbar() {
     };
   }, [open]);
 
+  const revealNavbar = () => {
+    hiddenRef.current = false;
+    setHidden(false);
+  };
+
   return (
-    <header className="fixed inset-x-0 top-0 z-40 text-foreground">
+    <>
+      <div
+        className="nav-reveal-zone"
+        aria-hidden="true"
+        onPointerEnter={revealNavbar}
+      />
+      <motion.header
+      className="fixed inset-x-0 top-0 z-40 text-foreground"
+      animate={{ y: hidden && !open ? "calc(-100% - 8px)" : "0%" }}
+      transition={{
+        duration: reducedMotion ? 0 : hidden ? 0.26 : 0.4,
+        ease: hidden ? motionTokens.ease.standard : motionTokens.ease.reveal,
+      }}
+      onFocusCapture={revealNavbar}
+    >
       <div className="site-container py-3 sm:py-4">
         <div
           data-intro=""
           style={{ "--intro-delay": "0.08s" } as CSSProperties}
           className={cn(
-            "nav-shell flex min-h-14 items-center justify-between gap-5 transition-[background-color,border-color,box-shadow]",
+            "nav-shell relative flex min-h-14 items-center justify-between gap-5 transition-[background-color,border-color,box-shadow,padding]",
             scrolled
               ? "nav-shell--scrolled"
               : "nav-shell--top",
@@ -150,7 +202,7 @@ export default function Navbar() {
             VD<span className="text-accent">.</span><span className="nav-wordmark">Vishwa<br />Dayarathne</span>
           </a>
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-5 lg:flex xl:gap-6">
+          <nav aria-label="Main navigation" className="hidden items-center gap-3 xl:flex 2xl:gap-5">
             {links.map((link) => (
               <a
                 key={link.href}
@@ -159,12 +211,19 @@ export default function Navbar() {
                 aria-current={activeSection === link.href.slice(1) ? "location" : undefined}
                 className="nav-link flex min-h-11 items-center"
               >
-                {link.label}
+                {activeSection === link.href.slice(1) && (
+                  <motion.span
+                    layoutId="desktop-nav-active"
+                    className="nav-link-active"
+                    transition={{ duration: reducedMotion ? 0 : 0.32, ease: motionTokens.ease.reveal }}
+                  />
+                )}
+                <span className="relative z-10">{link.label}</span>
               </a>
             ))}
           </nav>
 
-          <div className="nav-actions hidden items-center gap-1 lg:flex">
+          <div className="nav-actions hidden items-center gap-1 xl:flex">
             <a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub" className="icon-button" data-cursor="button">
               <FaGithub size={17} aria-hidden="true" />
             </a>
@@ -179,7 +238,10 @@ export default function Navbar() {
           <button
             ref={toggleRef}
             type="button"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => {
+              revealNavbar();
+              setOpen((value) => !value);
+            }}
             className="icon-button mobile-menu-toggle"
             aria-label="Toggle menu"
             aria-expanded={open}
@@ -189,6 +251,13 @@ export default function Navbar() {
           >
             {open ? <X size={21} aria-hidden="true" /> : <Menu size={21} aria-hidden="true" />}
           </button>
+
+          <span className="nav-progress-track" aria-hidden="true">
+            <motion.span
+              className="nav-progress-value"
+              style={{ scaleX: scrollProgress }}
+            />
+          </span>
         </div>
       </div>
 
@@ -205,7 +274,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
             transition={{ duration: reducedMotion ? 0 : motionTokens.duration.normal, ease: motionTokens.ease.standard }}
-            className="mobile-panel fixed inset-0 z-50 overflow-y-auto bg-background lg:hidden"
+            className="mobile-panel fixed inset-0 z-50 overflow-y-auto bg-background xl:hidden"
           >
             <div className="site-container pt-4 pb-8">
               <div className="surface rounded-lg border border-border p-5">
@@ -261,6 +330,7 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+      </motion.header>
+    </>
   );
 }
