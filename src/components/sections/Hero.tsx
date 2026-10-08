@@ -10,8 +10,11 @@ export default function Hero() {
     <section id="top" aria-label="Introduction" className="hero">
       <ScrollHandoff preset="hero" className="site-container hero-inner">
         <IntroReveal preset="fade" delay={0.18} className="hero-meta eyebrow">
-          <span>Software Engineer / Full-Stack Developer</span>
-          <span className="hero-location">{profile.location}</span>
+          <span className="hero-role">Software Engineer <i>/</i> Full-Stack Developer</span>
+          <span className="hero-location">
+            <span>Based in</span>
+            <strong>{profile.location}</strong>
+          </span>
         </IntroReveal>
         <div className="hero-heading">
           <IntroReveal preset="support" delay={0.28} className="hero-intro">
@@ -38,7 +41,12 @@ export default function Hero() {
         <IntroStagger delay={0.76} className="hero-bottom">
           <StaggerItem preset="fade"><div><p className="availability"><span aria-hidden="true" />Open to professional opportunities</p><p className="meta">{profile.roles[1]} · ZData Innovations</p></div></StaggerItem>
           <StaggerItem preset="fade"><a href="#about" data-cursor="nav" className="scroll-cue" aria-label="Scroll to about section"><span>Scroll to discover</span><ArrowDown size={18} aria-hidden="true" /></a></StaggerItem>
-          <StaggerItem preset="fade"><span className="hero-edition eyebrow">Personal portfolio / 2026</span></StaggerItem>
+          <StaggerItem preset="fade">
+            <span className="hero-edition" aria-label="Personal portfolio, 2026 edition">
+              <span>Personal portfolio</span>
+              <strong>2026</strong>
+            </span>
+          </StaggerItem>
         </IntroStagger>
       </ScrollHandoff>
     </section>
