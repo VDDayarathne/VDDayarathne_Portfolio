@@ -8,11 +8,11 @@ const nextConfig: NextConfig = {
   basePath: isProd ? "/VDDayarathne_Portfolio" : "",
   assetPrefix: isProd ? "/VDDayarathne_Portfolio/" : "",
 
+  trailingSlash: true,
+
   images: {
     unoptimized: true,
   },
-
-  trailingSlash: true,
 };
 
 export default nextConfig;
