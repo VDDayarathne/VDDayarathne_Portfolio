@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion } from "framer-motion";
 import { Menu, X, Mail, ArrowRight } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { profile } from "@/data/profile";
@@ -21,7 +21,9 @@ const links = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  // A motion value updates the progress bar on the compositor without
+  // re-rendering the entire navigation tree on every scroll frame.
+  const scrollProgress = useMotionValue(0);
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const scrolledRef = useRef(false);
@@ -47,7 +49,7 @@ export default function Navbar() {
       }
 
       const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(scrollable > 0 ? Math.min(1, y / scrollable) : 0);
+      scrollProgress.set(scrollable > 0 ? Math.min(1, y / scrollable) : 0);
 
       const delta = y - lastScrollYRef.current;
       const direction = delta > 1 ? "down" : delta < -1 ? "up" : directionRef.current;
@@ -81,7 +83,7 @@ export default function Navbar() {
       window.removeEventListener("scroll", onScroll);
       window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [scrollProgress]);
 
   useEffect(() => {
     const intersecting = new Map<string, HTMLElement>();

@@ -98,6 +98,9 @@ export default function ScrollSequenceBackground({ frames }: { frames: readonly 
         // Cover the canvas completely without clearing it between frames or distorting the image.
         context.drawImage(image, (canvas.width - drawWidth) / 2,
           (canvas.height - drawHeight) / 2, drawWidth, drawHeight);
+        // The CSS image is only a first-paint fallback. Dropping it after the
+        // first canvas frame avoids compositing two full-screen image layers.
+        if (canvas.style.backgroundImage !== "none") canvas.style.backgroundImage = "none";
         drawnIndex = available.index;
         drawnImage = image;
         canvas.dataset.frameIndex = String(drawnIndex);

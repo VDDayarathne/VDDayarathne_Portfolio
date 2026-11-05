@@ -19,7 +19,6 @@ export class BackgroundFrameCache {
   private objectUrls = new Map<HTMLImageElement, { url: string; reject: (reason: Error) => void }>();
   private stale = new Set<number>();
   private priorities: number[] = [0];
-  private cursor = 0;
   private target = 0;
   private displayed = -1;
   private disposed = false;
@@ -62,6 +61,7 @@ export class BackgroundFrameCache {
       order.push(target + distance * direction, target - distance * direction);
     }
     this.priorities = [...new Set(order)].filter((index) => index >= 0 && index < this.urls.length);
+    this.cancelObsoleteRequests();
     this.pump();
   }
 
@@ -110,16 +110,21 @@ export class BackgroundFrameCache {
     }
 
     while (this.requests.size < LOAD_CONCURRENCY) {
-      let index = this.priorities.find((candidate) => this.needsLoad(candidate));
-      if (index === undefined) {
-        if (this.staticMode) break;
-        while (this.cursor < this.urls.length && !this.needsLoad(this.cursor)) this.cursor++;
-        if (this.cursor >= this.urls.length) break;
-        index = this.cursor++;
-      }
+      const index = this.priorities.find((candidate) => this.needsLoad(candidate));
+      // Loading the whole sequence eagerly competes with scrolling, decoding,
+      // and layout. Keep only the directional working set warm; seeking to a
+      // distant point reprioritizes that set immediately.
+      if (index === undefined) break;
       const controller = new AbortController();
       this.requests.set(index, controller);
       void this.load(index, controller);
+    }
+  }
+
+  private cancelObsoleteRequests() {
+    const wanted = new Set(this.priorities);
+    for (const [index, controller] of this.requests) {
+      if (!wanted.has(index)) controller.abort();
     }
   }
 
@@ -136,8 +141,10 @@ export class BackgroundFrameCache {
       if (!response.ok) throw new Error(`Background frame returned ${response.status}`);
       const blob = await response.blob();
       if (!this.disposed) this.blobs.set(index, blob);
-    } catch {
-      if (!this.disposed) this.failures.add(index);
+    } catch (error) {
+      // Reprioritization deliberately aborts stale requests. They must remain
+      // eligible when the visitor scrolls back to that part of the sequence.
+      if (!this.disposed && !controller.signal.aborted) this.failures.add(index);
     } finally {
       this.requests.delete(index);
       if (!this.disposed) {

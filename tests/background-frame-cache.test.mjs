@@ -131,20 +131,22 @@ function fixture({ count = 30, autoLoad = true, bitmap = true, missing = [] } = 
   };
 }
 
-test("loads each compressed frame once with bounded network and decoder concurrency", async (t) => {
+test("loads only the directional working set with bounded network and decoder concurrency", async (t) => {
   const f = fixture();
   t.after(() => f.cache.dispose());
   f.cache.setViewport(1280, 720);
   f.cache.prioritize(19, -1);
   await f.settleBitmaps();
 
-  assert.equal(f.cache.loadedCount, 30);
-  assert.equal(f.fetches.length, 30);
-  assert.equal(new Set(f.fetches.map(({ index }) => index)).size, 30);
+  assert.equal(f.cache.loadedCount, 18);
+  assert.equal(f.fetches.length, 18);
+  assert.equal(new Set(f.fetches.map(({ index }) => index)).size, 18);
   assert(f.maximumFetches <= 4);
   assert(f.maximumDecodes <= 2);
   assert.equal(f.cache.nearest(19)?.index, 19);
-  assert(f.cache.nearest(29), "A loaded nearby frame should provide a drawable fallback");
+  assert(f.fetches.some(({ index }) => index === 27), "Nearby compressed frames should be warm");
+  assert(f.cache.nearest(27), "A decoded nearby frame should provide a drawable fallback");
+  assert(!f.fetches.some(({ index }) => index === 29), "Distant frames should remain lazy");
 });
 
 test("reduced motion loads only the still frame and can resume the full sequence", async (t) => {
@@ -163,9 +165,21 @@ test("reduced motion loads only the still frame and can resume the full sequence
   f.cache.setStaticMode(false);
   f.cache.prioritize(19, -1);
   await f.settleBitmaps();
-  assert.equal(f.cache.loadedCount, 30);
+  assert.equal(f.cache.loadedCount, 18);
   assert.equal(f.cache.nearest(19)?.index, 19);
   assert.equal(f.fetches.filter(({ index }) => index === 0).length, 1);
+});
+
+test("seeking aborts obsolete network work and reprioritizes the new neighborhood", async (t) => {
+  const f = fixture({ count: 80, autoLoad: false });
+  t.after(() => f.cache.dispose());
+  f.cache.prioritize(10, 1);
+  const oldRequests = [...f.fetches];
+  f.cache.prioritize(70, -1);
+
+  assert(oldRequests.filter(({ index }) => index !== 0).every(({ signal }) => signal.aborted));
+  await flush();
+  assert(f.fetches.some(({ index }) => index === 70));
 });
 
 test("the decoded working set becomes idle within its budget while retaining the displayed fallback", async (t) => {
