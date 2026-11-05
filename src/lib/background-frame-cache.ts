@@ -141,7 +141,7 @@ export class BackgroundFrameCache {
       if (!response.ok) throw new Error(`Background frame returned ${response.status}`);
       const blob = await response.blob();
       if (!this.disposed) this.blobs.set(index, blob);
-    } catch (error) {
+    } catch {
       // Reprioritization deliberately aborts stale requests. They must remain
       // eligible when the visitor scrolls back to that part of the sequence.
       if (!this.disposed && !controller.signal.aborted) this.failures.add(index);

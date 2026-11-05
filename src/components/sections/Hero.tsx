@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUpRight, Mail } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Download } from "lucide-react";
 import { profile } from "@/data/profile";
 import Button from "@/components/ui/Button";
 import { IntroReveal, IntroStagger, StaggerItem } from "@/components/ui/Reveal";
@@ -35,7 +35,9 @@ export default function Hero() {
           </IntroReveal>
           <IntroReveal preset="support" delay={0.66} className="hero-actions">
             <Button href="#projects">Explore my work <ArrowUpRight size={18} aria-hidden="true" /></Button>
-            <Button href={profile.resumeUrl} variant="ghost">Request CV <Mail size={16} aria-hidden="true" /></Button>
+            <Button href={profile.resumeUrl} variant="ghost" download="Vishwa_Dayarathne_CV.pdf">
+              Download CV <Download size={16} aria-hidden="true" />
+            </Button>
           </IntroReveal>
         </div>
         <IntroStagger delay={0.76} className="hero-bottom">

@@ -245,7 +245,7 @@ export default function Navbar() {
               setOpen((value) => !value);
             }}
             className="icon-button mobile-menu-toggle"
-            aria-label="Toggle menu"
+            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={open}
             aria-controls="mobile-navigation"
             aria-haspopup="dialog"
@@ -262,6 +262,7 @@ export default function Navbar() {
           </span>
         </div>
       </div>
+      </motion.header>
 
       <AnimatePresence>
         {open && (
@@ -276,10 +277,10 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
             transition={{ duration: reducedMotion ? 0 : motionTokens.duration.normal, ease: motionTokens.ease.standard }}
-            className="mobile-panel fixed inset-0 z-50 overflow-y-auto bg-background xl:hidden"
+            className="mobile-panel fixed inset-0 z-50 min-h-dvh overflow-y-auto overscroll-contain bg-background xl:hidden"
           >
-            <div className="site-container pt-4 pb-8">
-              <div className="surface rounded-lg border border-border p-5">
+            <div className="mobile-panel-inner site-container flex min-h-dvh flex-col py-4">
+              <div className="mobile-panel-surface surface flex flex-1 flex-col rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between border-b border-border pb-4">
                   <p id="mobile-navigation-title" className="eyebrow text-muted">Navigation</p>
                   <button type="button" onClick={() => setOpen(false)} className="icon-button" aria-label="Close menu">
@@ -288,7 +289,7 @@ export default function Navbar() {
                 </div>
                 <motion.nav
                   aria-label="Mobile navigation"
-                  className="mt-3 flex flex-col"
+                  className="mt-3 flex flex-1 flex-col justify-center"
                   initial={reducedMotion ? false : "closed"}
                   animate="open"
                   variants={{ open: { transition: { staggerChildren: reducedMotion ? 0 : 0.045, delayChildren: reducedMotion ? 0 : 0.06 } } }}
@@ -332,7 +333,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-      </motion.header>
     </>
   );
 }

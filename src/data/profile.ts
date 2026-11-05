@@ -7,9 +7,9 @@ export const profile = {
   email: "2001vddayarathna@gmail.com",
   linkedin: "https://www.linkedin.com/in/vishwa-dayarathne-0a0a6b2b0",
   github: "https://github.com/VDDayarathne",
-  resumeUrl: "mailto:2001vddayarathna@gmail.com?subject=CV%20Request",
+  resumeUrl: "./Vishwa_Dayarathne_CV.pdf",
   tagline: "I turn complex requirements into thoughtful, dependable software combining practical engineering experience with the curiosity to keep learning and the versatility to contribute across the development lifecycle.",
-  summary: "I am a growth-oriented software engineer who enjoys understanding difficult problems, shaping practical solutions, and following through with care. I adapt quickly, value clear communication, and work well with others toward shared goals. I am looking to contribute meaningful value to an organization, learn from experienced professionals, take on greater responsibility, and grow alongside the team and company I join.",
+  summary: "Software Engineering graduate (results pending) with hands-on experience delivering production-level software in professional engineering environments. Currently working as an Associate Software Engineer, with experience building scalable backend features, improving system reliability, and developing clean, maintainable solutions using modern engineering practices. Strong problem-solving, collaboration, and analytical skills, with experience working on enterprise FinTech and banking solutions.",
 };
 
 export type Stat = { label: string; value: string };
